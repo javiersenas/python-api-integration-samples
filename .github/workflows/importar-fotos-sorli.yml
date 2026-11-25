@@ -1,0 +1,39 @@
+name: Importar fotos Frutas Sorli
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/importar-fotos-sorli.yml']
+permissions:
+  contents: write
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar y validar fotos originales
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p sabore-fotos/sorli
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/10/oronules-2a-1-225x300.jpeg' -o 'sabore-fotos/sorli/oronules-2a-1-225x300.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/10/oronules-cat-1-1-225x300.jpeg' -o 'sabore-fotos/sorli/oronules-cat-1-1-225x300.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/07/citricos-ok-300x185.jpeg' -o 'sabore-fotos/sorli/citricos-ok-300x185.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/06/aguacate3-225x300.jpeg' -o 'sabore-fotos/sorli/aguacate3-225x300.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/09/Diseno-sin-titulo-2023-10-03T184108.038-300x300.png' -o 'sabore-fotos/sorli/Diseno-sin-titulo-2023-10-03T184108.038-300x300.png'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/05/CESTA-7-191026--300x225.jpeg' -o 'sabore-fotos/sorli/CESTA-7-191026--300x225.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/07/caja-neus-300x198.jpeg' -o 'sabore-fotos/sorli/caja-neus-300x198.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/07/caja-tomates-300x179.jpeg' -o 'sabore-fotos/sorli/caja-tomates-300x179.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/07/caja-ensalada-300x232.jpeg' -o 'sabore-fotos/sorli/caja-ensalada-300x232.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/05/caja-basicos-300x225.jpeg' -o 'sabore-fotos/sorli/caja-basicos-300x225.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/10/pack-halloween-300x225.jpeg' -o 'sabore-fotos/sorli/pack-halloween-300x225.jpeg'
+          curl --fail --location --retry 2 --max-time 30 --user-agent 'Mozilla/5.0' 'https://tienda.frutassorli.com/wp-content/uploads/2026/11/caja-soltero-a-1111-300x240.png' -o 'sabore-fotos/sorli/caja-soltero-a-1111-300x240.png'
+          for f in sabore-fotos/sorli/*; do
+            file --mime-type -b "$f" | grep -q '^image/'
+          done
+      - name: Publicar fotos
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add sabore-fotos/sorli/
+          git diff --cached --quiet || git commit -m 'Añadir fotos originales Frutas Sorli'
+          git push
