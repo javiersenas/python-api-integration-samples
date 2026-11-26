@@ -1,0 +1,46 @@
+name: Publicar fotos Sublime El Romero
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/importar-romero-sublime.yml']
+permissions:
+  contents: write
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow
+      - name: Descargar y validar las cuatro fotografías autorizadas
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import urlopen
+          from io import BytesIO
+          from PIL import Image, ImageOps
+          photos = {"romero-sublime-jijona.png":"https://sdmntprnortheu.oaiusercontent.com/files/00000000-60a0-81f4-98bf-5db245a133b4/raw?se=2026-11-26T09%3A33%3A21Z&sp=r&sv=2026-06-06&sr=b&scid=67301c28-2683-5d58-ad0b-4dc4093d1e54&skoid=56822d8b-6cfd-42ed-a00d-1452dca42036&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-26T07%3A49%3A31Z&ske=2026-11-27T07%3A49%3A31Z&sks=b&skv=2026-06-06&sig=o9vWyaEi3XCrjeuGjqfywwU%2BpFVpzZHxPG5k6GksMAc%3D","romero-sublime-alicante.png":"https://sdmntprnortheu.oaiusercontent.com/files/00000000-2664-81f4-afca-7fac4ed19666/raw?se=2026-11-26T09%3A33%3A21Z&sp=r&sv=2026-06-06&sr=b&scid=67301c28-2683-5d58-ad0b-4dc4093d1e54&skoid=56822d8b-6cfd-42ed-a00d-1452dca42036&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-26T08%3A03%3A11Z&ske=2026-11-27T08%3A03%3A11Z&sks=b&skv=2026-06-06&sig=RMbsLQ42pJAXYYYGrVf6AyIU6GVNdYyZ%2BJ%2BQOgZyp1E%3D","romero-sublime-almendra-cacao.png":"https://sdmntprpolandcentral.oaiusercontent.com/files/00000000-a12c-820a-b54c-51e084957856/raw?se=2026-11-26T09%3A33%3A22Z&sp=r&sv=2026-06-06&sr=b&scid=67301c28-2683-5d58-ad0b-4dc4093d1e54&skoid=56822d8b-6cfd-42ed-a00d-1452dca42036&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-26T07%3A21%3A50Z&ske=2026-11-27T07%3A21%3A50Z&sks=b&skv=2026-06-06&sig=sdAwzr5qnQAzAZJYBDS83uz5yyXUPcLrJSZX8sunbqw%3D","romero-sublime-yema-tostada.png":"https://sdmntprnortheu.oaiusercontent.com/files/00000000-4f44-81f4-9bef-ffda61aa46b3/raw?se=2026-11-26T09%3A33%3A22Z&sp=r&sv=2026-06-06&sr=b&scid=67301c28-2683-5d58-ad0b-4dc4093d1e54&skoid=56822d8b-6cfd-42ed-a00d-1452dca42036&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-26T05%3A51%3A34Z&ske=2026-11-27T05%3A51%3A34Z&sks=b&skv=2026-06-06&sig=mZjIGRgANDR//J5v88EKxbePiDOwqVoiMjSHkHjQSDQ%3D"}
+          dest = Path('sabore-fotos')
+          dest.mkdir(exist_ok=True)
+          for name, url in photos.items():
+              with urlopen(url, timeout=25) as response:
+                  data = response.read()
+              with Image.open(BytesIO(data)) as original:
+                  rgb = ImageOps.exif_transpose(original).convert('RGBA')
+                  white = Image.new('RGBA', rgb.size, 'white')
+                  white.alpha_composite(rgb)
+                  im = ImageOps.pad(white.convert('RGB'), (800,800), color='white', method=Image.Resampling.LANCZOS)
+                  im.save(dest / name, 'PNG', optimize=True)
+              with Image.open(dest / name) as check:
+                  assert check.format == 'PNG' and check.mode == 'RGB' and check.size == (800,800)
+                  check.verify()
+          PY
+      - name: Publicar fotografías
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add sabore-fotos/romero-sublime-*.png
+          git diff --cached --quiet || git commit -m 'Publicar cuatro fotografías Sublime El Romero'
+          git push
